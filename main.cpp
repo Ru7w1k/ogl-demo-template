@@ -1,14 +1,11 @@
 // headers
-#include <windows.h>
-#include <stdio.h>
-
-#include <chrono>
-
-#include <gl/glew.h> 
-#include <gl/GL.h>
-
-
 #include "main.h"
+#include "helper.h"
+
+// scenes
+#include "scene.h"
+#include "scene-triangle.h"
+#include "scene-square.h"
 
 #pragma comment(lib, "glew32.lib")
 #pragma comment(lib, "opengl32.lib")
@@ -24,18 +21,17 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HDC   ghdc = NULL;
 HGLRC ghrc = NULL;
 
-bool gbFullscreen   = false;
+bool gbFullscreen = false;
 bool gbActiveWindow = false;
 
-HWND  ghwnd  = NULL;
+HWND  ghwnd = NULL;
 FILE* gpFile = NULL;
 
 DWORD dwStyle;
 WINDOWPLACEMENT wpPrev = { sizeof(WINDOWPLACEMENT) };
 
-GLuint gVertexShaderObject;
-GLuint gFragmentShaderObject;
-GLuint gShaderProgramObject;
+int gWidth  = 0;
+int gHeight = 0;
 
 // WinMain()
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
@@ -54,7 +50,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 
 	// code
 	// open file for logging
-	if (fopen_s(&gpFile, "RMCLog.txt", "w") != 0)
+	if (fopen_s(&gpFile, "Sandbox.log", "w") != 0)
 	{
 		MessageBox(NULL, TEXT("Cannot open RMCLog.txt file.."), TEXT("Error"), MB_OK | MB_ICONERROR);
 		exit(0);
@@ -85,10 +81,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	// create window
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW,
 		szAppName,
-		TEXT("OpenGL | Demo Template"),
+		TEXT("OpenGL | Sandbox"),
 		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
-		(width / 2) - 400,
-		(height / 2) - 300,
+		(width / 2) - (WIN_WIDTH / 2),
+		(height / 2) - (WIN_HEIGHT / 2),
 		WIN_WIDTH,
 		WIN_HEIGHT,
 		NULL,
@@ -244,10 +240,10 @@ void initialize(void)
 	// code
 	ghdc = GetDC(ghwnd);
 
-	ZeroMemory((void *)&pfd, sizeof(PIXELFORMATDESCRIPTOR));
+	ZeroMemory((void*)&pfd, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL| PFD_DOUBLEBUFFER;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 32;
 	pfd.cRedBits = 8;
@@ -300,68 +296,49 @@ void initialize(void)
 	GLint numExtensions;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
-	fprintf(gpFile, "OpenGL Extensions: \n");
+	fprintf(gpFile, "==== OpenGL Extensions ====\n");
 	for (int i = 0; i < numExtensions; i++)
 	{
 		fprintf(gpFile, "  %s\n", glGetStringi(GL_EXTENSIONS, i));
 	}
+	fprintf(gpFile, "===========================\n\n");	
 
-	//// vertex shader
-	// create shader
-	gVertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
+	// initialize scene queue
+	InitSceneQueue();
 
-	// provide source code to shader
-	const GLchar *vertexShaderSourceCode = 
-		"#version 450 \n" \
-		"\n" \
-		"void main(void) \n"
-		"{ \n" \
-		"\n" \
-		"} \n";
+	// add scenes
+	if (!AddScene(GetTriangleScene())) fprintf(gpFile, "ERROR: Scene AddScene() failed..\n");
+	if (!AddScene(GetSquareScene())) fprintf(gpFile, "ERROR: Scene AddScene() failed..\n");
 
-	glShaderSource(gVertexShaderObject, 1, (const GLchar**)&vertexShaderSourceCode, NULL);
+	// initialize all scenes
+	for (int i = 0; i < GetSceneCount(); i++)
+	{
+		Scene scene;
+		if (GetSceneAt(scene, i))
+		{
+			if (!scene.InitFunc())
+			{
+				fprintf(gpFile, "ERROR: Scene %s Init() failed..\n", scene.Name);
+				DestroyWindow(ghwnd);
+			}
+			fprintf(gpFile, "Scene %s Init() done..\n", scene.Name);
 
-	// compile shader
-	glCompileShader(gVertexShaderObject);
+			// warm-up resize
+			scene.ResizeFunc(WIN_WIDTH, WIN_HEIGHT);
+			fprintf(gpFile, "Scene %s Resize() done..\n", scene.Name);
+		}
+	}
 
-	//// fragment shader
-	// create shader
-	gFragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// provide source code to shader
-	const GLchar *fragmentShaderSourceCode = 
-		"#version 450 \n" \
-		"\n" \
-		"void main(void) \n"
-		"{ \n" \
-		"\n" \
-		"} \n";
-
-	glShaderSource(gFragmentShaderObject, 1, (const GLchar**)&fragmentShaderSourceCode, NULL);
-
-	// compile shader
-	glCompileShader(gFragmentShaderObject);
-
-	//// shader program
-	// create
-	gShaderProgramObject = glCreateProgram();
-
-	// attach shaders
-	glAttachShader(gShaderProgramObject, gVertexShaderObject);
-	glAttachShader(gShaderProgramObject, gFragmentShaderObject);
-
-	// link shader
-	glLinkProgram(gShaderProgramObject);
-
-	// set clear color
+	// set clear color and clear depth
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-	// set clear depth
 	glClearDepth(1.0f);
 
-	// depth test
+	// depth test 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+	
+	// clock for syncing
+	InitClock();
 
 	// warm-up resize call
 	resize(WIN_WIDTH, WIN_HEIGHT);
@@ -373,19 +350,23 @@ void resize(int width, int height)
 	if (height == 0)
 		height = 1;
 
-	glViewport(0, 0, (GLsizei)width, (GLsizei)height);	
+	gWidth  = width;
+	gHeight = height;
+
+	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+
+	// resize active scene
+	Scene scene;
+	if (GetScene(scene)) scene.ResizeFunc(width, height);
 }
 
 void display(void)
 {
 	// code
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// start using OpenGL program object
-	glUseProgram(gShaderProgramObject);
-
-	// stop using OpenGL program object
-	glUseProgram(0);
+	// draw active scene
+	Scene scene;
+	if (GetScene(scene)) scene.DisplayFunc();
 
 	SwapBuffers(ghdc);
 }
@@ -393,6 +374,31 @@ void display(void)
 void update(void)
 {
 	// code
+	
+	float delta = GetTimeDeltaMS();
+	//fprintf(gpFile, "Time Delta  : %f\n", delta);
+
+	// update active scene
+	Scene scene;
+	if (GetScene(scene))
+	{
+		if (scene.UpdateFunc(delta))
+		{
+			fprintf(gpFile, "Scene %s Update() finished..\n", scene.Name);
+			if (!RemoveScene())
+			{
+				fprintf(gpFile, "ERROR: Scene %s Remove() failed..\n", scene.Name);
+			}
+
+			// if no next scene, terminate
+			if (!GetScene(scene)) DestroyWindow(ghwnd);
+
+			// warm-up resize call to next scene
+			scene.ResizeFunc(gWidth, gHeight);
+			fprintf(gpFile, "Scene %s Resize() finished..\n", scene.Name);
+		}
+	}
+
 }
 
 void uninitialize(void)
@@ -414,36 +420,15 @@ void uninitialize(void)
 		ShowCursor(TRUE);
 	}
 
-	// destroy shader programs
-	if (gShaderProgramObject)
+	// uninit all scenes
+	for (int i = 0; i < GetSceneCount(); i++)
 	{
-		GLsizei shaderCount;
-		GLsizei i;
-
-		glUseProgram(gShaderProgramObject);
-		glGetProgramiv(gShaderProgramObject, GL_ATTACHED_SHADERS, &shaderCount);
-		
-		GLuint *pShaders = (GLuint*) malloc(shaderCount * sizeof(GLuint));
-		if (pShaders)
+		Scene scene;
+		if (GetSceneAt(scene, i))
 		{
-			glGetAttachedShaders(gShaderProgramObject, shaderCount, &shaderCount, pShaders);
-
-			for (i = 0; i < shaderCount; i++)
-			{
-				// detach shader
-				glDetachShader(gShaderProgramObject, pShaders[i]);
-
-				// delete shader
-				glDeleteShader(pShaders[i]);
-				pShaders[i] = 0;
-			}
-
-			free(pShaders);
+			fprintf(gpFile, "Scene %s Uninit() calling..\n", scene.Name);
+			scene.UninitFunc();
 		}
-
-		glDeleteProgram(gShaderProgramObject);
-		gShaderProgramObject = 0;
-		glUseProgram(0);
 	}
 
 	if (wglGetCurrentContext() == ghrc)
