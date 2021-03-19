@@ -1,6 +1,7 @@
 // headers
 #include "main.h"
 #include "scene-triangle.h"
+#include "logger.h"
 
 // scene variable
 Scene *SceneTriangle;
@@ -64,7 +65,7 @@ namespace triangle
 					GLsizei written;
 					glGetShaderInfoLog(gVertexShaderObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, "Vertex Shader Compiler Info Log: \n%s\n", szInfoLog);
+					LogD("Vertex Shader Compiler Info Log: \n%s", szInfoLog);
 					free(szInfoLog);
 					return false;
 				}
@@ -109,7 +110,7 @@ namespace triangle
 					GLsizei written;
 					glGetShaderInfoLog(gFragmentShaderObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, "Fragment Shader Compiler Info Log: \n%s\n", szInfoLog);
+					LogD("Fragment Shader Compiler Info Log: \n%s", szInfoLog);
 					free(szInfoLog);
 					return false;
 				}
@@ -148,7 +149,7 @@ namespace triangle
 					GLsizei written;
 					glGetProgramInfoLog(gShaderProgramObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, ("Shader Program Linking Info Log: \n%s\n"), szInfoLog);
+					LogD(("Shader Program Linking Info Log: \n%s"), szInfoLog);
 					free(szInfoLog);
 					return false;
 				}

@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="helper.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scene-square.cpp" />
     <ClCompile Include="scene-triangle.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helper.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="scene-square.h" />
     <ClInclude Include="scene-triangle.h" />

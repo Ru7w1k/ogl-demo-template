@@ -19,15 +19,15 @@
     <Filter Include="Header Files\scenes">
       <UniqueIdentifier>{a9cf7829-ccc3-4a94-8d1a-e58db95b1926}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\helper">
+      <UniqueIdentifier>{20ececf5-25a7-4807-9c0e-ed01c7ababa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\helper">
+      <UniqueIdentifier>{e0c8d40b-c96e-4ad2-bfff-f4f3d2bb7215}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scene-triangle.cpp">
@@ -35,6 +35,15 @@
     </ClCompile>
     <ClCompile Include="scene-square.cpp">
       <Filter>Source Files\scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="helper.cpp">
+      <Filter>Source Files\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="scene.cpp">
+      <Filter>Source Files\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="logger.cpp">
+      <Filter>Header Files\helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,13 +55,7 @@
     <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vmath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scene-triangle.h">
@@ -60,6 +63,15 @@
     </ClInclude>
     <ClInclude Include="scene-square.h">
       <Filter>Header Files\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="helper.h">
+      <Filter>Header Files\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="scene.h">
+      <Filter>Header Files\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>Source Files\helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

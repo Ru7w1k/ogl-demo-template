@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "scene.h"
+#include "logger.h"
 
 #define QUEUE_SIZE 25
 
@@ -40,7 +41,11 @@ bool InitSceneQueue()
 bool AddScene(Scene* scene)
 {
     // error conditions
-    if (SceneQueue == NULL) return false;
+    if (SceneQueue == NULL)
+    {
+        LogE("Added Scene: %s", scene->Name);
+        return false;
+    }
 
     // if it is the first element, set front and rear both
     if (SceneQueue->front == -1 && SceneQueue->rear == -1)
@@ -55,18 +60,24 @@ bool AddScene(Scene* scene)
 
     SceneQueue->data[SceneQueue->rear] = scene;
     SceneQueue->count++;
+    LogD("Added Scene: %s", scene->Name);
     return true;
 }
 
 bool RemoveScene()
 {
     // error conditions
-    if (SceneQueue == NULL || isEmpty()) return false;
+    if (SceneQueue == NULL || isEmpty())
+    {
+        LogE("Removed Scene failed..");
+        return false;
+    }
 
     // soft delete the scene
     // SceneQueue->data[SceneQueue->front] = NULL;
     // SceneQueue->count--;
     SceneQueue->front++;
+    LogD("Removed Scene: %s", SceneQueue->data[SceneQueue->front-1]->Name);
     return true;
 }
 

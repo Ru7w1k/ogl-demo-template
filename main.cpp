@@ -1,6 +1,7 @@
 // headers
 #include "main.h"
 #include "helper.h"
+#include "logger.h"
 
 // scenes
 #include "scene.h"
@@ -25,7 +26,6 @@ bool gbFullscreen = false;
 bool gbActiveWindow = false;
 
 HWND  ghwnd = NULL;
-FILE* gpFile = NULL;
 
 DWORD dwStyle;
 WINDOWPLACEMENT wpPrev = { sizeof(WINDOWPLACEMENT) };
@@ -49,13 +49,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	TCHAR szAppName[] = TEXT("MyApp");
 
 	// code
-	// open file for logging
-	if (fopen_s(&gpFile, "Sandbox.log", "w") != 0)
-	{
-		MessageBox(NULL, TEXT("Cannot open RMCLog.txt file.."), TEXT("Error"), MB_OK | MB_ICONERROR);
-		exit(0);
-	}
-	fprintf(gpFile, "==== Application Started ====\n");
 
 	// initialization of WNDCLASSEX
 	wndclass.cbSize = sizeof(WNDCLASSEX);
@@ -255,60 +248,68 @@ void initialize(void)
 	iPixelFormatIndex = ChoosePixelFormat(ghdc, &pfd);
 	if (iPixelFormatIndex == 0)
 	{
-		fprintf(gpFile, "ChoosePixelFormat() failed..\n");
+		LogD("ChoosePixelFormat() failed..");
 		DestroyWindow(ghwnd);
+		return;
 	}
 
 	if (SetPixelFormat(ghdc, iPixelFormatIndex, &pfd) == FALSE)
 	{
-		fprintf(gpFile, "SetPixelFormat() failed..\n");
+		LogD("SetPixelFormat() failed..");
 		DestroyWindow(ghwnd);
+		return;
 	}
 
 	ghrc = wglCreateContext(ghdc);
 	if (ghrc == NULL)
 	{
-		fprintf(gpFile, "wglCreateContext() failed..\n");
+		LogD("wglCreateContext() failed..");
 		DestroyWindow(ghwnd);
+		return;
 	}
 
 	if (wglMakeCurrent(ghdc, ghrc) == FALSE)
 	{
-		fprintf(gpFile, "wglMakeCurrent() failed..\n");
+		LogD("wglMakeCurrent() failed..");
 		DestroyWindow(ghwnd);
+		return;
 	}
 
 	// glew initialization for programmable pipeline
 	GLenum glew_error = glewInit();
 	if (glew_error != GLEW_OK)
 	{
-		fprintf(gpFile, "glewInit() failed..\n");
+		LogD("glewInit() failed..");
 		DestroyWindow(ghwnd);
+		return;
 	}
 
+	// init logger
+	InitLogger();
+
 	// fetch OpenGL related details
-	fprintf(gpFile, "OpenGL Vendor:   %s\n", glGetString(GL_VENDOR));
-	fprintf(gpFile, "OpenGL Renderer: %s\n", glGetString(GL_RENDERER));
-	fprintf(gpFile, "OpenGL Version:  %s\n", glGetString(GL_VERSION));
-	fprintf(gpFile, "GLSL Version:    %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+	LogD("OpenGL Vendor:   %s", glGetString(GL_VENDOR));
+	LogD("OpenGL Renderer: %s", glGetString(GL_RENDERER));
+	LogD("OpenGL Version:  %s", glGetString(GL_VERSION));
+	LogD("GLSL Version:    %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 	// fetch OpenGL enabled extensions
 	GLint numExtensions;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
-	fprintf(gpFile, "==== OpenGL Extensions ====\n");
+	LogD("==== OpenGL Extensions ====");
 	for (int i = 0; i < numExtensions; i++)
 	{
-		fprintf(gpFile, "  %s\n", glGetStringi(GL_EXTENSIONS, i));
+		LogD("  %s", glGetStringi(GL_EXTENSIONS, i));
 	}
-	fprintf(gpFile, "===========================\n\n");	
+	LogD("===========================\n");	
 
 	// initialize scene queue
 	InitSceneQueue();
 
 	// add scenes
-	if (!AddScene(GetTriangleScene())) fprintf(gpFile, "ERROR: Scene AddScene() failed..\n");
-	if (!AddScene(GetSquareScene())) fprintf(gpFile, "ERROR: Scene AddScene() failed..\n");
+	AddScene(GetTriangleScene());
+	AddScene(GetSquareScene());
 
 	// initialize all scenes
 	for (int i = 0; i < GetSceneCount(); i++)
@@ -318,14 +319,15 @@ void initialize(void)
 		{
 			if (!scene.InitFunc())
 			{
-				fprintf(gpFile, "ERROR: Scene %s Init() failed..\n", scene.Name);
+				LogE("Scene %s Init() failed..", scene.Name);
 				DestroyWindow(ghwnd);
+				return;
 			}
-			fprintf(gpFile, "Scene %s Init() done..\n", scene.Name);
+			LogD("Scene %s Init() done..", scene.Name);
 
 			// warm-up resize
 			scene.ResizeFunc(WIN_WIDTH, WIN_HEIGHT);
-			fprintf(gpFile, "Scene %s Resize() done..\n", scene.Name);
+			LogD("Scene %s Resize() done..", scene.Name);
 		}
 	}
 
@@ -337,7 +339,7 @@ void initialize(void)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	
-	// clock for syncing
+	// clock for syncing animation speed
 	InitClock();
 
 	// warm-up resize call
@@ -376,7 +378,7 @@ void update(void)
 	// code
 	
 	float delta = GetTimeDeltaMS();
-	//fprintf(gpFile, "Time Delta  : %f\n", delta);
+	//LogD("Time Delta  : %f", delta);
 
 	// update active scene
 	Scene scene;
@@ -384,18 +386,21 @@ void update(void)
 	{
 		if (scene.UpdateFunc(delta))
 		{
-			fprintf(gpFile, "Scene %s Update() finished..\n", scene.Name);
-			if (!RemoveScene())
-			{
-				fprintf(gpFile, "ERROR: Scene %s Remove() failed..\n", scene.Name);
-			}
+			// current scene is completed
+			// move to the next scene
+			LogD("Scene %s Update() done..", scene.Name);
+			RemoveScene();
 
 			// if no next scene, terminate
-			if (!GetScene(scene)) DestroyWindow(ghwnd);
+			if (!GetScene(scene))
+			{
+				DestroyWindow(ghwnd);
+				return;
+			}
 
 			// warm-up resize call to next scene
 			scene.ResizeFunc(gWidth, gHeight);
-			fprintf(gpFile, "Scene %s Resize() finished..\n", scene.Name);
+			LogD("Scene %s Resize() done..", scene.Name);
 		}
 	}
 
@@ -426,7 +431,7 @@ void uninitialize(void)
 		Scene scene;
 		if (GetSceneAt(scene, i))
 		{
-			fprintf(gpFile, "Scene %s Uninit() calling..\n", scene.Name);
+			LogD("Scene %s Uninit() calling..", scene.Name);
 			scene.UninitFunc();
 		}
 	}
@@ -448,12 +453,7 @@ void uninitialize(void)
 		ghdc = NULL;
 	}
 
-	if (gpFile)
-	{
-		fprintf(gpFile, "==== Application Terminated ====\n");
-		fclose(gpFile);
-		gpFile = NULL;
-	}
+	UninitLogger();
 }
 
 

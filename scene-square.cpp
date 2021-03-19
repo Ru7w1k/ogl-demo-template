@@ -1,6 +1,8 @@
 // headers
 #include "main.h"
+#include "logger.h"
 #include "scene-triangle.h"
+
 
 // scene variable
 Scene *SceneSquare;
@@ -64,7 +66,7 @@ namespace square
 					GLsizei written;
 					glGetShaderInfoLog(gVertexShaderObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, "Vertex Shader Compiler Info Log: \n%s\n", szInfoLog);
+					LogD("Vertex Shader Compiler Info Log: \n%s", szInfoLog);
 					free(szInfoLog);
 					return false;
 				}
@@ -109,7 +111,7 @@ namespace square
 					GLsizei written;
 					glGetShaderInfoLog(gFragmentShaderObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, "Fragment Shader Compiler Info Log: \n%s\n", szInfoLog);
+					LogD("Fragment Shader Compiler Info Log: \n%s", szInfoLog);
 					free(szInfoLog);
 					return false;
 				}
@@ -148,7 +150,7 @@ namespace square
 					GLsizei written;
 					glGetProgramInfoLog(gShaderProgramObject, GL_INFO_LOG_LENGTH, &written, szInfoLog);
 
-					fprintf(gpFile, ("Shader Program Linking Info Log: \n%s\n"), szInfoLog);
+					LogD(("Shader Program Linking Info Log: \n%s"), szInfoLog);
 					free(szInfoLog);
 					return false;
 				}
@@ -301,7 +303,7 @@ namespace square
 	bool Update(float delta)
 	{
 		angleSquare += 0.000002f * delta;
-		if (angleSquare > 180.0f) return true;
+		if (angleSquare > 90.0f) return true;
 
 		return false;
 	}

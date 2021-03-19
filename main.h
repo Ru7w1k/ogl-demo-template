@@ -16,8 +16,5 @@ enum {
 	RMC_ATTRIBUTE_TEXCOORD,
 };
 
-// externs
-extern FILE* gpFile;
-
 // Resources
 #define RMC_ICON 101
