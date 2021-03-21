@@ -43,7 +43,7 @@
       <Filter>Source Files\helper</Filter>
     </ClCompile>
     <ClCompile Include="logger.cpp">
-      <Filter>Header Files\helper</Filter>
+      <Filter>Source Files\helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,7 +71,7 @@
       <Filter>Header Files\helper</Filter>
     </ClInclude>
     <ClInclude Include="logger.h">
-      <Filter>Source Files\helper</Filter>
+      <Filter>Header Files\helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
