@@ -108,3 +108,48 @@ int GetSceneCount()
     return SceneQueue->count;
 }
 
+void PrevScene()
+{
+    // error conditions
+    if (isEmpty()) return;
+
+    // if already on first scene, return
+    if (SceneQueue->front == 0) return;
+
+    // go to previous scene
+    SceneQueue->front--;
+
+    // reset the scene
+    SceneQueue->data[SceneQueue->front]->ResetFunc();
+}
+
+void NextScene()
+{
+    // error conditions
+    if (isEmpty()) return;
+
+    // if already on last scene, return
+    if (SceneQueue->front == SceneQueue->count-1) return;
+
+    // go to previous scene
+    SceneQueue->front++;
+
+    // reset the scene
+    SceneQueue->data[SceneQueue->front]->ResetFunc();
+}
+
+void SetScene(int sceneNo)
+{
+    // error conditions
+    if (isEmpty()) return;
+
+    // if sceneNo is out of range [0, count-1]
+    if (sceneNo < 0 || sceneNo > SceneQueue->count - 1) return;
+
+    // go to requested scene
+    SceneQueue->front = sceneNo;
+
+    // reset the scene
+    SceneQueue->data[SceneQueue->front]->ResetFunc();
+}
+

@@ -5,7 +5,7 @@
 
 
 // scene variable
-Scene *SceneSquare;
+Scene *SceneSquare = NULL;
 
 namespace square
 {
@@ -256,7 +256,11 @@ namespace square
 		}
 
 		// free the scene
-		if (SceneSquare) free(SceneSquare);
+		if (SceneSquare)
+		{
+			free(SceneSquare);
+			SceneSquare = NULL;
+		}
 	}
 
 	void Display(void)
@@ -313,20 +317,28 @@ namespace square
 		perspectiveProjectionMatrix = vmath::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
 	}
 
+	void Reset(void)
+	{
+		angleSquare = 0.0f;
+	}
 }
 
 Scene *GetSquareScene()
 {
-	SceneSquare = (Scene*)malloc(sizeof(Scene));
+	if (!SceneSquare)
+	{
+		SceneSquare = (Scene*)malloc(sizeof(Scene));
 
-	strcpy_s(SceneSquare->Name, "SquareScene");
+		strcpy_s(SceneSquare->Name, "SquareScene");
 
-	SceneSquare->InitFunc   = square::Init;
-	SceneSquare->UninitFunc = square::Uninit;
+		SceneSquare->InitFunc   = square::Init;
+		SceneSquare->UninitFunc = square::Uninit;
+		SceneSquare->ResetFunc  = square::Reset;
 
-	SceneSquare->DisplayFunc = square::Display;
-	SceneSquare->UpdateFunc  = square::Update;
-	SceneSquare->ResizeFunc  = square::Resize;
+		SceneSquare->DisplayFunc = square::Display;
+		SceneSquare->UpdateFunc  = square::Update;
+		SceneSquare->ResizeFunc  = square::Resize;
+	}
 
 	return SceneSquare;
 }

@@ -3,6 +3,7 @@
 // callback function types for scene
 typedef bool (*pfInit)   (void);
 typedef void (*pfUninit) (void);
+typedef void (*pfReset)  (void);
 
 typedef void (*pfDisplay) (void);
 typedef bool (*pfUpdate)  (float);
@@ -17,6 +18,7 @@ typedef struct _scene
 	pfDisplay DisplayFunc;
 	pfUpdate  UpdateFunc;
 	pfResize  ResizeFunc;
+	pfReset   ResetFunc;
 
 } Scene;
 
@@ -38,4 +40,9 @@ bool GetSceneAt(Scene&, int);
 
 // get the total scene count
 int GetSceneCount();
+
+// scene traverse
+void PrevScene();
+void NextScene();
+void SetScene(int);
 
