@@ -4,7 +4,7 @@
 #include "logger.h"
 
 // scene variable
-Scene *SceneTriangle = NULL;
+Scene *SceneTriangle;
 
 namespace triangle
 {
@@ -253,11 +253,7 @@ namespace triangle
 		}
 
 		// free the scene
-		if (SceneTriangle)
-		{
-			free(SceneTriangle);
-			SceneTriangle = NULL;
-		}
+		if (SceneTriangle) free(SceneTriangle);
 	}
 
 	void Display(void)
@@ -313,29 +309,20 @@ namespace triangle
 	{
 		perspectiveProjectionMatrix = vmath::perspective(45.0f, (float)width / (float)height, 0.1f, 100.0f);
 	}
-
-	void Reset(void)
-	{
-		angleTriangle = 0.0f;
-	}
 }
 
 Scene *GetTriangleScene()
 {
-	if (!SceneTriangle)
-	{
-		SceneTriangle = (Scene*)malloc(sizeof(Scene));
+	SceneTriangle = (Scene*)malloc(sizeof(Scene));
 
-		strcpy_s(SceneTriangle->Name, "TriangleScene");
+	strcpy_s(SceneTriangle->Name, "TriangleScene");
 
-		SceneTriangle->InitFunc   = triangle::Init;
-		SceneTriangle->UninitFunc = triangle::Uninit;
-		SceneTriangle->ResetFunc  = triangle::Reset;
+	SceneTriangle->InitFunc   = triangle::Init;
+	SceneTriangle->UninitFunc = triangle::Uninit;
 
-		SceneTriangle->DisplayFunc = triangle::Display;
-		SceneTriangle->UpdateFunc  = triangle::Update;
-		SceneTriangle->ResizeFunc  = triangle::Resize;
-	}
+	SceneTriangle->DisplayFunc = triangle::Display;
+	SceneTriangle->UpdateFunc  = triangle::Update;
+	SceneTriangle->ResizeFunc  = triangle::Resize;
 
 	return SceneTriangle;
 }

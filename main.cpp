@@ -33,15 +33,13 @@ WINDOWPLACEMENT wpPrev = { sizeof(WINDOWPLACEMENT) };
 int gWidth  = 0;
 int gHeight = 0;
 
-bool bPause = false;
-
 // WinMain()
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int iCmdShow)
 {
 	// function declarations
 	void initialize(void);
 	void display(void);
-	void update(float);
+	void update(void);
 
 	// variable declarations
 	bool bDone = false;
@@ -49,7 +47,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 	HWND hwnd;
 	MSG msg;
 	TCHAR szAppName[] = TEXT("MyApp");
-	float delta;
 
 	// code
 
@@ -113,9 +110,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLi
 		{
 			if (gbActiveWindow == true)
 			{
-				delta = GetTimeDeltaMS();
 				// call update() here for OpenGL rendering
-				if (!bPause) update(delta);
+				update();
 				// call display() here for OpenGL rendering
 				display();
 			}
@@ -159,18 +155,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		case 0x46:
 		case 0x66:
 			ToggleFullscreen();
-			break;
-
-		case VK_LEFT:
-			PrevScene();
-			break;
-
-		case VK_RIGHT:
-			NextScene();
-			break;
-
-		case VK_SPACE:
-			bPause = !bPause;
 			break;
 
 		default:
@@ -389,10 +373,13 @@ void display(void)
 	SwapBuffers(ghdc);
 }
 
-void update(float delta)
+void update(void)
 {
-	// code	
+	// code
 	
+	float delta = GetTimeDeltaMS();
+	//LogD("Time Delta  : %f", delta);
+
 	// update active scene
 	Scene scene;
 	if (GetScene(scene))
@@ -416,6 +403,7 @@ void update(float delta)
 			LogD("Scene %s Resize() done..", scene.Name);
 		}
 	}
+
 }
 
 void uninitialize(void)
